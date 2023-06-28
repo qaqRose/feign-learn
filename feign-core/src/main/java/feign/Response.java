@@ -31,13 +31,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
+ * 不可变响应，仅返回字符串
  * An immutable response to an http invocation which only returns string
  * content.
  */
 public final class Response {
+  /**
+   * http状态码
+   */
   private final int status;
+
+  /**
+   * todo：失败原因？
+   */
   private final String reason;
+
+  /**
+   * 响应头
+   */
   private final ImmutableListMultimap<String, String> headers;
+
+  /**
+   * 响应体，对象
+   * @see Body
+   */
   private final Optional<Body> body;
 
   public static Response create(int status, String reason, ImmutableListMultimap<String, String> headers,
@@ -78,9 +95,13 @@ public final class Response {
     return body;
   }
 
+  /**
+   * 响应实体
+   */
   public interface Body extends Closeable {
 
     /**
+     * 响应字节的长度
      * length in bytes, if known.
      * <p/>
      * <h4>Note</h4> This is an integer as most implementations cannot do
@@ -95,6 +116,7 @@ public final class Response {
     boolean isRepeatable();
 
     /**
+     * 将响应实体转化为 字符流  Reader
      * It is the responsibility of the caller to close the stream.
      */
     Reader asReader() throws IOException;

@@ -47,6 +47,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * 用于构建http请求，线程不安全
  * Builds a request to an http target. Not thread safe.
  * <p/>
  * <h4>relationship to JAXRS 2.0</h4>
@@ -75,7 +76,9 @@ public final class RequestTemplate implements Serializable {
    *
    * @see RequestTemplate#expand(String, Map)
    */
-  @Target(METHOD) @Retention(RUNTIME) public @interface Body {
+  @Target(METHOD)
+  @Retention(RUNTIME)
+  public @interface Body {
     String value();
   }
 

@@ -34,9 +34,24 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class Request {
 
+  /**
+   * 请求方法
+   */
   private final String method;
+
+  /**
+   * 请求地址
+   */
   private final String url;
+
+  /**
+   * http 请求头
+   */
   private final ImmutableListMultimap<String, String> headers;
+
+  /**
+   * http request body
+   */
   private final Optional<String> body;
 
   Request(String method, String url, ImmutableListMultimap<String, String> headers, Optional<String> body) {

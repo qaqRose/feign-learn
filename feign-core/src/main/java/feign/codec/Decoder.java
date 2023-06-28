@@ -17,13 +17,15 @@ package feign.codec;
 
 import com.google.common.io.Closer;
 import com.google.common.reflect.TypeToken;
+import feign.Response;
 
 import java.io.IOException;
 import java.io.Reader;
 
-import feign.Response;
-
 /**
+ * http响应解码器，将响应解码成Java实体
+ * 可以提供多种实体，json解码，错误解码（例如规定http状态码不等于200就是错误，2xx）
+ *
  * Decodes an HTTP response into a given type. Invoked when
  * {@link Response#status()} is in the 2xx range.
  * <p/>

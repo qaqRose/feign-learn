@@ -17,7 +17,12 @@ package feign;
 
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.io.ByteSink;
+import dagger.Lazy;
+import feign.Request.Options;
 
+import javax.inject.Inject;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,17 +34,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Inject;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
-
-import dagger.Lazy;
-import feign.Request.Options;
-
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
 
 /**
+ *
+ * http请求执行客户端，并提供了一个默认的实现（jdk net实现）
+ *
  * Submits HTTP {@link Request requests}. Implementations are expected to be
  * thread-safe.
  */
