@@ -8,6 +8,6 @@
 
 ## todo
 
-✅1.切换成maven项目（学艺不精，gradle一直报错，影响调试）
+1. 切换成maven项目（学艺不精，gradle一直报错，影响调试）✅
 2. feign核心代码注释、流程图
 3. feign-demo开发
