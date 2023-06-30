@@ -20,6 +20,10 @@ import com.google.common.reflect.TypeToken;
 
 import java.io.Reader;
 
+/**
+ * 转字符串解码器
+ * 把字符流转成字符
+ */
 public class ToStringDecoder extends Decoder {
   @Override
   public Object decode(String methodKey, Reader reader, TypeToken<?> type) throws Throwable {

@@ -27,12 +27,41 @@ public final class MethodMetadata implements Serializable {
   MethodMetadata() {
   }
 
+  /**
+   * 方法的javadoc
+   * @see feign.Feign#configKey(java.lang.reflect.Method)
+   */
   private String configKey;
   private transient TypeToken<?> returnType;
+
+  /**
+   * 方法参数支持 {@code URI}
+   * urlIndex设置 URI在方法参数列表的下标位置
+   * 没有则为空
+   */
   private Integer urlIndex;
+  /**
+   * request body 在方法参数列表的下标位置
+   * 没有则为空
+   */
   private Integer bodyIndex;
   private RequestTemplate template = new RequestTemplate();
+
+  /**
+   * 表单参数名称
+   * @see javax.ws.rs.FormParam
+   */
   private List<String> formParams = Lists.newArrayList();
+
+  /**
+   * 存储请求方法的一些参数的位置下标（顺序）和名称，蚕例如path或query
+   * key表示位置下标，value表示 PathParam 的name 或 PathParam 的name
+   * @see javax.ws.rs.PathParam
+   * @see javax.ws.rs.QueryParam
+   * @see javax.ws.rs.HeaderParam
+   * @see javax.ws.rs.FormParam
+   *
+   */
   private SetMultimap<Integer, String> indexToName = LinkedHashMultimap.create();
 
   /**

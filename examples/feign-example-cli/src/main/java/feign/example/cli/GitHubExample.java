@@ -18,35 +18,22 @@ package feign.example.cli;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-
-import java.io.Reader;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Singleton;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
 import feign.codec.Decoder;
+import feign.example.Contributor;
+import feign.example.GitHub;
+
+import javax.inject.Singleton;
+import java.io.Reader;
+import java.util.List;
+import java.util.Map;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}
  */
 public class GitHubExample {
-
-  interface GitHub {
-    @GET @Path("/repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
-  }
-
-  static class Contributor {
-    String login;
-    int contributions;
-  }
 
   public static void main(String... args) {
     GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());

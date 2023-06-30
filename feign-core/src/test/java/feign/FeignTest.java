@@ -20,13 +20,12 @@ import com.google.common.reflect.TypeToken;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.SocketPolicy;
-
+import dagger.Module;
+import dagger.Provides;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
+import feign.codec.ToStringDecoder;
 import org.testng.annotations.Test;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.net.URI;
-import java.util.Map;
 
 import javax.inject.Singleton;
 import javax.net.ssl.SSLSocketFactory;
@@ -34,12 +33,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-
-import dagger.Module;
-import dagger.Provides;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
-import feign.codec.ToStringDecoder;
+import java.io.IOException;
+import java.io.Reader;
+import java.net.URI;
+import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
 
@@ -48,7 +45,8 @@ public class FeignTest {
   interface TestInterface {
     @POST String post();
 
-    @GET @Path("/{1}/{2}") Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
+    @GET @Path("/{1}/{2}")
+    Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
 
     @dagger.Module(overrides = true, library = true)
     static class Module {
@@ -68,7 +66,8 @@ public class FeignTest {
 
   @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "zone not found")
   public void canOverrideErrorDecoderOnMethod() throws IOException, InterruptedException {
-    @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
+    @dagger.Module(overrides = true, includes = TestInterface.Module.class)
+    class Overrides {
       @Provides @Singleton Map<String, ErrorDecoder> decoders() {
         return ImmutableMap.<String, ErrorDecoder>of("TestInterface#post()", new ErrorDecoder() {
 

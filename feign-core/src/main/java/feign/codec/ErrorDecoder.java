@@ -19,15 +19,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Ticker;
 import com.google.common.reflect.TypeToken;
+import feign.FeignException;
+import feign.Response;
+import feign.RetryableException;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import feign.FeignException;
-import feign.Response;
-import feign.RetryableException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.getFirst;
@@ -38,6 +37,8 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
+ * 错误解码器，把系统异常编解码
+ * todo:
  * Allows you to massage an exception into a application-specific one, or
  * fallback to a default value. Falling back to null on
  * {@link Response#status() status 404}, or converting out to a throttle

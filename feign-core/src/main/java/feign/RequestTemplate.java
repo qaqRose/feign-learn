@@ -82,6 +82,10 @@ public final class RequestTemplate implements Serializable {
     String value();
   }
 
+  /**
+   * http 请求方法
+   * @see javax.ws.rs.HttpMethod
+   */
   private String method;
   /* final to encourage mutable use vs replacing the object. */
   private StringBuilder url = new StringBuilder();
@@ -106,6 +110,8 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * 解析http url和请求头，主要是针对一些模板变量`{}`进行替换，没有找对应key的继续保留
+   *
    * Targets a template to this target, adding the {@link #url() base url} and
    * any authentication headers.
    * <p/>
@@ -132,12 +138,15 @@ public final class RequestTemplate implements Serializable {
     for (Entry<String, ?> entry : unencoded.entrySet()) {
       encoded.put(entry.getKey(), urlEncode(String.valueOf(entry.getValue())));
     }
+    // 展开查询串的一些模板变量
     String queryLine = expand(queryLine(), encoded);
     queries.clear();
     pullAnyQueriesOutOfUrl(new StringBuilder(queryLine));
+    // url上的模板变量也解析一次， 例如 Path
     String resolvedUrl = expand(url.toString(), encoded).replace("%2F", "/");
     url = new StringBuilder(resolvedUrl);
 
+    // 解析header
     ListMultimap<String, String> resolvedHeaders = LinkedListMultimap.create();
     for (Entry<String, String> entry : headers.entries()) {
       String value = null;
@@ -162,6 +171,11 @@ public final class RequestTemplate implements Serializable {
         ImmutableListMultimap.copyOf(headers), body);
   }
 
+  /**
+   * url 编码
+   * @param arg
+   * @return
+   */
   private static String urlDecode(String arg) {
     try {
       return URLDecoder.decode(arg, UTF_8.name());
@@ -170,6 +184,9 @@ public final class RequestTemplate implements Serializable {
     }
   }
 
+  /**
+   * url utf8 编码， 保证请求安全
+   */
   private static String urlEncode(Object arg) {
     try {
       return URLEncoder.encode(String.valueOf(arg), UTF_8.name());
@@ -179,6 +196,8 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * 把{paramName}替换真的参数值， paramName是在解析方法注解时，使用`{%s}`模板保存的字符串
+   *
    * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any unresolved
    * parameters will remain.
    * <p/>
@@ -212,7 +231,7 @@ public final class RequestTemplate implements Serializable {
           if (value != null)
             builder.append(value);
           else
-            builder.append('{').append(key).append('}');
+            builder.append('{').append(key).append('}');   // 没有遇到一样的模板名称，则继续保留（报错容易马上发现）
           var = new StringBuilder();
           break;
         default:
@@ -236,17 +255,26 @@ public final class RequestTemplate implements Serializable {
     return method;
   }
 
-  /* @see #url() */
+  /**
+   * 在解析 Path注解的路径时，追加到url
+   * 在{@code feign.Contract#parseAndValidatateMetadata(java.lang.reflect.Method)} 处理feign方法上的Path时获取
+   * @see javax.ws.rs.Path
+   * @see #url()
+   */
   public RequestTemplate append(CharSequence value) {
     url.append(value);
     url = pullAnyQueriesOutOfUrl(url);
     return this;
   }
 
-  /* @see #url() */
+  /**
+   * requestTemplate的请求url是拼接，
+   * 这里暴露一个方法，让外部通过下标构造url
+   *  @see #url()
+   */
   public RequestTemplate insert(int pos, CharSequence value) {
     url.insert(pos, value);
-    url = pullAnyQueriesOutOfUrl(url);
+    url = pullAnyQueriesOutOfUrl(url);  // 检查是否有查询参数
     return this;
   }
 
@@ -339,6 +367,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * 请求头，通过解析请求方法上的注解来获取
    * Replaces headers with the specified {@code configKey} with the
    * {@code values} supplied.
    * <p/>
@@ -458,6 +487,8 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * 将body的查询参数提取出来, 并添加到queries
+   * 并返回纯url(无查询参数
    * if there are any query params in the {@link #body()}, this will extract
    * them out.
    *
@@ -469,7 +500,7 @@ public final class RequestTemplate implements Serializable {
     if (queryIndex != -1) {
       String queryLine = url.substring(queryIndex + 1);
       ListMultimap<String, String> firstQueries = parseAndDecodeQueries(queryLine);
-      if (!queries.isEmpty()) {
+      if (!queries.isEmpty()) { // 如果不为空，则合并 （优先queries的参数
         firstQueries.putAll(queries);
         queries.clear();
       }
@@ -479,23 +510,35 @@ public final class RequestTemplate implements Serializable {
     return url;
   }
 
+  /**
+   * 将查询参数
+   * @param queryLine
+   * @return
+   */
   private static ListMultimap<String, String> parseAndDecodeQueries(String queryLine) {
     ListMultimap<String, String> map = LinkedListMultimap.create();
     if (Strings.emptyToNull(queryLine) == null)
       return map;
+    // 将查询串编解码
     if (queryLine.indexOf('&') == -1) {
+      // 只有一对kv
       if (queryLine.indexOf('=') != -1)
-        putKV(queryLine, map);
+        putKV(queryLine, map);      // 解析ky，保存到map
       else
-        map.put(queryLine, null);
+        map.put(queryLine, null);   // 只有key,没有value
     } else {
-      for (String part : Splitter.on('&').split(queryLine)) {
+      for (String part : Splitter.on('&').split(queryLine)) {  // 解析多个ky
         putKV(part, map);
       }
     }
     return map;
   }
 
+  /**
+   * 解析 stringToParse 到 map (k=v格式)
+   * @param stringToParse
+   * @param map
+   */
   private static void putKV(String stringToParse, Multimap<String, String> map) {
     String key;
     String value;
@@ -525,6 +568,10 @@ public final class RequestTemplate implements Serializable {
     return request().toString();
   }
 
+  /**
+   * 构造查询串
+   * @return
+   */
   public String queryLine() {
     if (queries.isEmpty())
       return "";
@@ -538,7 +585,7 @@ public final class RequestTemplate implements Serializable {
         queryBuilder.append(pair.getValue());
       }
     }
-    queryBuilder.deleteCharAt(0);
+    queryBuilder.deleteCharAt(0);  // 删除第一个&
     return queryBuilder.insert(0, '?').toString();
   }
 

@@ -18,12 +18,6 @@ package feign;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import java.lang.reflect.Method;
-import java.util.Map;
-
-import javax.net.ssl.SSLSocketFactory;
-
 import dagger.ObjectGraph;
 import dagger.Provides;
 import feign.Request.Options;
@@ -34,7 +28,12 @@ import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.FormEncoder;
 
+import javax.net.ssl.SSLSocketFactory;
+import java.lang.reflect.Method;
+import java.util.Map;
+
 /**
+ * Feign抽象类，用来创建目标http api的工厂
  * Feign's purpose is to ease development against http apis that feign
  * restfulness.
  * <p/>
@@ -44,12 +43,26 @@ import feign.codec.FormEncoder;
 public abstract class Feign {
 
   /**
+   * 工厂类产生实例的方法，生成指定{@code target}的type的实例
+   * 由子类决定生产的方式
+   * 例如
+   * @see feign.ReflectiveFeign
+   * 通过反射生成代理类
    * Returns a new instance of an HTTP API, defined by annotations in the
    * {@link Feign Contract}, for the specified {@code target}. You should
    * cache this result.
    */
   public abstract <T> T newInstance(Target<T> target);
 
+  /**
+   * 创建一个http api 实例
+   * todo: 后面怎么解析不直接传入url, 或者有没有其他实现 除了HardCodedTarget
+   * @param apiType  实例类型
+   * @param url      域名地址(直接合方法上的地址拼接)
+   * @param modules  dagger模块（使用门槛还是比较高，提供了 GsonModule
+   * @return
+   * @param <T>
+   */
   public static <T> T create(Class<T> apiType, String url, Object... modules) {
     return create(new HardCodedTarget<T>(apiType, url), modules);
   }
@@ -68,8 +81,8 @@ public abstract class Feign {
    */
   public static Feign create(Object... modules) {
     Object[] modulesForGraph = ImmutableList.builder() //
-        .add(new Defaults()) //
-        .add(new ReflectiveFeign.Module()) //
+        .add(new Defaults()) //  默认模块实现
+        .add(new ReflectiveFeign.Module()) // 反射实现模块
         .add(Optional.fromNullable(modules).or(new Object[]{})).build().toArray();
     return ObjectGraph.create(modulesForGraph).get(Feign.class);
   }
@@ -127,6 +140,15 @@ public abstract class Feign {
   }
 
   /**
+   *
+   * 将方法按javadoc的方法格式解析
+   * 例如
+   * class Hello {
+   *    public void say(String name)
+   * }
+   *
+   * sag 解成 Hello#save(String)
+   * 好处应该是确保唯一
    * <p/>
    * Configuration keys are formatted as unresolved <a href=
    * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
@@ -150,10 +172,15 @@ public abstract class Feign {
     StringBuilder builder = new StringBuilder();
     builder.append(method.getDeclaringClass().getSimpleName());
     builder.append('#').append(method.getName()).append('(');
-    for (Class<?> param : method.getParameterTypes())
+
+    for (Class<?> param : method.getParameterTypes()) {
       builder.append(param.getSimpleName()).append(',');
-    if (method.getParameterTypes().length > 0)
+    }
+
+    if (method.getParameterTypes().length > 0) {
       builder.deleteCharAt(builder.length() - 1);
+    }
+
     return builder.append(')').toString();
   }
 

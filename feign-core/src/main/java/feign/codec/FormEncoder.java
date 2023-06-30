@@ -15,13 +15,18 @@
  */
 package feign.codec;
 
-import java.util.Map;
-
 import feign.RequestTemplate;
 
+import java.util.Map;
+
+/**
+ * form表单编码器
+ */
 public interface FormEncoder {
 
   /**
+   * 解析form表单参数到请求
+   *
    * FormParam encoding
    * <p/>
    * If any parameters are annotated with {@link javax.ws.rs.FormParam}, they will be

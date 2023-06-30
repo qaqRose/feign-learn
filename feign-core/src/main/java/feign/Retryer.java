@@ -24,6 +24,10 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
+ * 重试器
+ * 通过方法内部抛出 {@link RetryableException}
+ * 来累加重试次数，知道达到最大次数，默认重试5次
+ *
  * Created for each invocation to {@link Client#execute(Request, feign.Request.Options)}.
  * Implementations may keep state to determine if retry operations should
  * continue or not.
@@ -38,9 +42,19 @@ public interface Retryer {
 
   public static class Default implements Retryer {
 
+    /**
+     * 最大重试次数
+     */
     private final int maxAttempts;
+    /**
+     * 重试间隔
+     */
     private final long period;
+    /**
+     * 最大重试间隔
+     */
     private final long maxPeriod;
+
 
     public Default() {
       this(MILLISECONDS.toNanos(100), SECONDS.toNanos(1), 5);
@@ -55,7 +69,7 @@ public interface Retryer {
 
     // visible for testing;
     Ticker ticker = Ticker.systemTicker();
-    int attempt;
+    int attempt;   // 已重试次数
     long sleptForNanos;
 
     public void continueOrPropagate(RetryableException e) {

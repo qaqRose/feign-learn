@@ -18,27 +18,29 @@ package feign;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-
-import java.io.IOException;
-import java.net.URI;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import java.io.IOException;
+import java.net.URI;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.net.HttpHeaders.LOCATION;
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
 
+/**
+ * java类方法处理器
+ *
+ */
 final class MethodHandler {
 
   static class Factory {
 
-    private final Client client;
+    private final Client client;   // http请求客户端
     private final Provider<Retryer> retryer;
     private final Wire wire;
 
@@ -80,6 +82,12 @@ final class MethodHandler {
     this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
   }
 
+  /**
+   * http请求（或代理方法) 真正执行的地方
+   * @param argv
+   * @return
+   * @throws Throwable
+   */
   public Object invoke(Object[] argv) throws Throwable {
     RequestTemplate template = buildTemplateFromArgs.apply(argv);
     Retryer retryer = this.retryer.get();
@@ -93,6 +101,14 @@ final class MethodHandler {
     }
   }
 
+  /**
+   * 执行请求并解码
+   * @param configKey
+   * @param template
+   * @param returnType
+   * @return
+   * @throws Throwable
+   */
   public Object executeAndDecode(String configKey, RequestTemplate template, TypeToken<?> returnType)
       throws Throwable {
     // create the request from a mutable copy of the input template.

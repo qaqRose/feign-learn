@@ -27,7 +27,10 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-/*  Writes http headers and body. Plumb to your favorite log impl. */
+/**
+ * 错误日志封装
+ * Writes http headers and body. Plumb to your favorite log impl.
+ */
 public abstract class Wire {
   /*  logs to the category {@link Wire} at {@link Level#FINE}. */
   public static class ErrorWire extends Wire {
